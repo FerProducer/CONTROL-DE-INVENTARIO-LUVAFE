@@ -6,5 +6,12 @@
   "background_color": "#F3EFE0",
   "theme_color": "#4E3629",
   "lang": "es-MX",
-  "icons": []
+  "icons": [
+{
+    "src": "TAZA.png",
+    "sizes": "512x512",
+    "type": "image/png",
+    "purpose": "any maskable"
+  }
+  ]
 }
