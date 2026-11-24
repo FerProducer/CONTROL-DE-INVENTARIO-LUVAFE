@@ -4,7 +4,7 @@
 <head>
 
 <link rel="apple-touch-icon" href="TAZA.png">
-  
+
 <meta charset="utf-8">
 
 <meta
@@ -36,9 +36,9 @@
   rel="manifest"
   href="manifest.webmanifest"
 >
-  
 
-<title>LUVAFE · Inventario</title>
+
+<title>LUVAFE · Inventario Integral</title>
 
 
 <style>
@@ -120,7 +120,7 @@ body {
 
   backdrop-filter: blur(12px);
 
-  padding: 14px 16px;
+  padding: 12px 16px;
 
   border-bottom:
     1px solid var(--line);
@@ -149,6 +149,61 @@ body {
 
   margin-top: 2px;
 
+  font-weight: 700;
+
+}
+
+
+/* =========================================================
+   SELECTOR DE ALMACENES (4 INVENTARIOS)
+========================================================= */
+
+.storebar {
+
+  display: flex;
+
+  gap: 6px;
+
+  overflow-x: auto;
+
+  margin-top: 10px;
+
+  padding-bottom: 2px;
+
+}
+
+
+.storebtn {
+
+  border: 1px solid var(--line);
+
+  background: #FAF7F1;
+
+  border-radius: 10px;
+
+  padding: 7px 11px;
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  color: var(--brown);
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+}
+
+
+.storebtn.active {
+
+  background: var(--terra);
+
+  color: white;
+
+  border-color: var(--terra);
+
 }
 
 
@@ -168,7 +223,7 @@ nav {
 
   position: sticky;
 
-  top: 68px;
+  top: 106px;
 
   z-index: 9;
 
@@ -262,6 +317,27 @@ h2 {
   color: #77675E;
 
   font-size: 13px;
+
+}
+
+
+.badge {
+
+  display: inline-block;
+
+  padding: 3px 8px;
+
+  border-radius: 8px;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  background: #F7F0E6;
+
+  color: var(--brown);
+
+  border: 1px solid var(--line);
 
 }
 
@@ -712,12 +788,22 @@ footer {
 
 <header class="top">
 
-  <div class="brand">
-    LUVAFE
+  <div class="row">
+    <div>
+      <div class="brand">
+        LUVAFE
+      </div>
+      <div class="sub" id="storeSubtitle">
+        CONTROL DE INVENTARIO · MATERIA PRIMA
+      </div>
+    </div>
   </div>
 
-  <div class="sub">
-    CONTROL ADMINISTRATIVO · INVENTARIO
+  <div class="storebar" id="storeBar">
+    <button class="storebtn active" data-store="mp">1. Materia Prima</button>
+    <button class="storebtn" data-store="wip">2. Producto en Proceso</button>
+    <button class="storebtn" data-store="pt">3. Producto Terminado</button>
+    <button class="storebtn" data-store="emp">4. Empaque y Suministros</button>
   </div>
 
 </header>
@@ -742,6 +828,12 @@ footer {
     data-tab="moves"
   >
     Movimientos
+  </button>
+
+  <button
+    data-tab="links"
+  >
+    Entrelazado
   </button>
 
   <button
@@ -771,13 +863,13 @@ footer {
   class="tab active"
 >
 
-<h1>
-  Resumen
+<h1 id="dashTitle">
+  Resumen · Materia Prima
 </h1>
 
 <p class="muted">
   Control de existencias y compras.
-  Los datos se guardan en este dispositivo.
+  Los 4 inventarios están conectados y se guardan en este dispositivo.
 </p>
 
 
@@ -795,7 +887,7 @@ footer {
   <div class="row">
 
     <h2>
-      Compras sugeridas
+      Compras / reposición sugerida
     </h2>
 
     <button
@@ -823,8 +915,8 @@ footer {
   class="tab"
 >
 
-<h1>
-  Inventario
+<h1 id="invTitle">
+  Inventario · Materia Prima
 </h1>
 
 
@@ -833,7 +925,7 @@ footer {
   <input
     id="invSearch"
     class="search"
-    placeholder="Buscar materia prima..."
+    placeholder="Buscar en este inventario..."
     oninput="renderInventory()"
   >
 
@@ -841,7 +933,7 @@ footer {
     class="btn primary"
     onclick="newItem()"
   >
-    + Nueva materia
+    + Nuevo artículo
   </button>
 
   <button
@@ -863,7 +955,7 @@ footer {
 <tr>
 
 <th>
-Materia prima
+Artículo
 </th>
 
 <th>
@@ -930,9 +1022,14 @@ Valor
   class="tab"
 >
 
-<h1>
-  Registrar movimiento
+<h1 id="movesTitle">
+  Registrar movimiento · Materia Prima
 </h1>
+
+
+<div class="notice" id="moveLinkHint">
+  Si registras una <b>Entrada / producción</b> en un artículo con reglas de entrelazado, se descontarán automáticamente sus insumos de los demás inventarios.
+</div>
 
 
 <div class="card">
@@ -958,7 +1055,7 @@ Fecha y hora
 <div class="field">
 
 <label>
-Materia prima
+Artículo
 </label>
 
 <select
@@ -979,15 +1076,19 @@ Tipo
 >
 
 <option value="entrada">
-Entrada / compra
+Entrada / compra / producción
 </option>
 
 <option value="salida">
-Salida / producción
+Salida / consumo / venta
 </option>
 
-<option value="ajuste">
-Ajuste
+<option value="ajuste_mas">
+Ajuste (+) sumar stock
+</option>
+
+<option value="ajuste_menos">
+Ajuste (-) restar stock
 </option>
 
 </select>
@@ -1005,7 +1106,7 @@ Cantidad
   id="mQty"
   type="number"
   min="0"
-  step="0.01"
+  step="0.001"
   placeholder="0"
 >
 
@@ -1032,12 +1133,12 @@ Costo unitario
 <div class="field wide">
 
 <label>
-Notas / proveedor / motivo
+Notas / proveedor / lote / motivo
 </label>
 
 <input
   id="mNote"
-  placeholder="Ej. compra semanal, merma, ajuste..."
+  placeholder="Ej. compra semanal, horneado lote 1, merma, ajuste..."
 >
 
 </div>
@@ -1069,7 +1170,7 @@ Limpiar
 
 
 <h2>
-Historial
+Historial de movimientos
 </h2>
 
 
@@ -1082,7 +1183,7 @@ Historial
 <tr>
 
 <th>Fecha</th>
-<th>Materia</th>
+<th>Artículo</th>
 <th>Tipo</th>
 <th>Cantidad</th>
 <th>Costo</th>
@@ -1107,6 +1208,109 @@ Historial
 
 
 <!-- =====================================================
+     ENTRELAZADO ENTRE INVENTARIOS
+===================================================== -->
+
+<section
+  id="links"
+  class="tab"
+>
+
+<h1>
+  Entrelazado entre inventarios
+</h1>
+
+<p class="muted">
+  Conecta los 4 inventarios: al registrar una <b>Entrada / producción</b> en el <b>Inventario Destino</b>, el sistema descontará automáticamente la cantidad proporcional del <b>Inventario Origen</b>.
+</p>
+
+
+<div class="card">
+
+  <h2>
+    Nueva regla de entrelazado
+  </h2>
+
+  <div class="formgrid">
+
+    <div class="field">
+      <label>1. Al producir / entrar en (Destino):</label>
+      <select id="lTargetStore" onchange="populateLinkSelects()"></select>
+    </div>
+
+    <div class="field">
+      <label>2. Artículo producido (Destino):</label>
+      <select id="lTargetItem"></select>
+    </div>
+
+    <div class="field">
+      <label>3. Descontar de inventario (Origen):</label>
+      <select id="lSourceStore" onchange="populateLinkSelects()"></select>
+    </div>
+
+    <div class="field">
+      <label>4. Insumo / empaque a descontar (Origen):</label>
+      <select id="lSourceItem"></select>
+    </div>
+
+    <div class="field wide">
+      <label>5. Cantidad que se descuenta por cada 1 unidad producida</label>
+      <input
+        id="lRatio"
+        type="number"
+        min="0"
+        step="0.0001"
+        placeholder="Ej. 0.25 (si usa 250g de 1kg) o 1 (si usa 1 caja)"
+      >
+    </div>
+
+    <div class="field wide" style="display:flex;align-items:flex-end">
+      <button class="btn primary" style="width:100%" onclick="addLink()">
+        + Guardar vínculo automático
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+
+<h2 style="margin-top:16px">
+  Reglas activas entre los 4 inventarios
+</h2>
+
+
+<div class="tablewrap">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Cuando entra en (Destino)</th>
+<th>Artículo producido</th>
+<th>Descuenta de (Origen)</th>
+<th>Insumo / empaque</th>
+<th>Proporción (por 1 unid.)</th>
+<th></th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="linksBody"></tbody>
+
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
      IMPRESIÓN
 ===================================================== -->
 
@@ -1115,7 +1319,7 @@ Historial
   class="tab"
 >
 
-<h1 class="print-title">
+<h1 class="print-title" id="printTitle">
   Reporte de inventario · LUVAFE
 </h1>
 
@@ -1134,7 +1338,7 @@ Historial
   class="btn"
   onclick="printMode('inventory')"
 >
-Inventario
+Inventario actual
 </button>
 
 
@@ -1151,6 +1355,14 @@ Lista de compras
   onclick="printMode('moves')"
 >
 Movimientos
+</button>
+
+
+<button
+  class="btn"
+  onclick="printMode('all_stores')"
+>
+Resumen 4 inventarios
 </button>
 
 </div>
@@ -1181,15 +1393,13 @@ Administración
 <div class="notice">
 
 <b>
-Regla importante:
+Flujo operativo recomendado para los 4 inventarios:
 </b>
-
-Un movimiento debe representar una operación real.
-
-No uses "Entradas" y "Salidas"
-para corregir errores sin dejar una nota.
-
-Usa un <b>Ajuste</b> y explica el motivo.
+<br><br>
+1. <b>Materia Prima (MP)</b> y <b>Empaque (EMP)</b>: registra tus compras como <b>Entrada</b>.<br>
+2. <b>Producto en Proceso (WIP)</b>: al preparar mezclas/masas, registra una <b>Entrada</b> en WIP; si está entrelazada, descontará sola la Materia Prima.<br>
+3. <b>Producto Terminado (PT)</b>: al hornear/armar presentaciones finales, registra una <b>Entrada</b> en PT; si está entrelazada, descontará sola la mezcla de WIP y los empaques de EMP.<br>
+4. <b>Ventas / Salidas</b>: registra las entregas o ventas como <b>Salida</b> en Producto Terminado.
 
 </div>
 
@@ -1200,11 +1410,11 @@ Usa un <b>Ajuste</b> y explica el motivo.
 <div class="card">
 
 <h2>
-Respaldo
+Respaldo completo
 </h2>
 
 <p class="muted">
-Guarda una copia completa de inventario y movimientos.
+Guarda los 4 inventarios, movimientos y reglas de entrelazado en un solo archivo.
 </p>
 
 <button
@@ -1244,7 +1454,7 @@ Datos
 </h2>
 
 <p class="muted">
-Elimina todos los datos locales y vuelve al catálogo inicial.
+Elimina todos los datos locales de los 4 inventarios y vuelve al catálogo inicial.
 </p>
 
 <button
@@ -1281,50 +1491,6 @@ el sitio debe estar publicado mediante HTTPS.
 </div>
 
 
-<div
-  class="card"
-  style="margin-top:12px"
->
-
-<h2>
-Controles administrativos incluidos
-</h2>
-
-<ul>
-
-<li>
-Stock mínimo y alerta de compra.
-</li>
-
-<li>
-Costo unitario y valor estimado del inventario.
-</li>
-
-<li>
-Historial fechado de entradas, salidas y ajustes.
-</li>
-
-<li>
-Notas para proveedor, merma, diferencias y otros motivos.
-</li>
-
-<li>
-Respaldo y restauración local.
-</li>
-
-<li>
-Exportación CSV para análisis en Excel.
-</li>
-
-<li>
-Reporte imprimible de inventario, compras y movimientos.
-</li>
-
-</ul>
-
-</div>
-
-
 </section>
 
 
@@ -1333,7 +1499,7 @@ Reporte imprimible de inventario, compras y movimientos.
 
 <footer>
 
-LUVAFE · Control de inventario · Aplicación local
+LUVAFE · Sistema Integral de 4 Inventarios Entrelazados · Aplicación local
 
 </footer>
 
@@ -1344,260 +1510,152 @@ LUVAFE · Control de inventario · Aplicación local
 <script>
 
 /* =========================================================
-   DATOS INICIALES
+   CATÁLOGO DE LOS 4 ALMACENES
 ========================================================= */
 
-const BASE_ITEMS = [
+const STORES = {
+  mp:  { code: "MP",  name: "Materia Prima" },
+  wip: { code: "WIP", name: "Producto en Proceso" },
+  pt:  { code: "PT",  name: "Producto Terminado" },
+  emp: { code: "EMP", name: "Empaque y Suministros" }
+};
 
-{
-name:"Aceite",
-unit:"pieza",
-initial:5,
-min:3,
-cost:27
-},
 
-{
-name:"Azucar",
-unit:"kg",
-initial:6,
-min:5,
-cost:22.5
-},
+const BASE_DATA = {
 
-{
-name:"Cajeta Bolsa",
-unit:"pieza",
-initial:3,
-min:5,
-cost:25
-},
+  mp: [
+    { name:"Aceite", unit:"pieza", initial:5, min:3, cost:27 },
+    { name:"Azucar", unit:"kg", initial:6, min:5, cost:22.5 },
+    { name:"Cajeta Bolsa", unit:"pieza", initial:3, min:5, cost:25 },
+    { name:"Cajeta Lata", unit:"pieza", initial:9, min:10, cost:35 },
+    { name:"Cerveza Bud Light", unit:"pieza", initial:12, min:20, cost:12 },
+    { name:"Elote en lata", unit:"pieza", initial:5, min:0, cost:16 },
+    { name:"Galletas Maria", unit:"pieza", initial:24, min:0, cost:14 },
+    { name:"Harina Blanca El Globo", unit:"kg", initial:14, min:12, cost:16 },
+    { name:"Harina Chocolate", unit:"pieza", initial:14, min:10, cost:50 },
+    { name:"Harina de Brownie", unit:"pieza", initial:3, min:5, cost:70 },
+    { name:"Leche Condensada La Lechera", unit:"pieza", initial:17, min:15, cost:26 },
+    { name:"Leche Evaporada Carnation", unit:"pieza", initial:16, min:15, cost:20 },
+    { name:"Limon", unit:"kg", initial:.5, min:0, cost:0 },
+    { name:"Manteca Crystal", unit:"pieza", initial:5.5, min:8, cost:54 },
+    { name:"Mantequilla", unit:"kg", initial:1, min:2, cost:0 },
+    { name:"Media Crema", unit:"pieza", initial:1, min:0, cost:0 },
+    { name:"Mermelada", unit:"pieza", initial:1, min:0, cost:0 },
+    { name:"Queso Crema", unit:"pieza", initial:18, min:15, cost:27 },
+    { name:"Sal", unit:"kg", initial:1, min:0, cost:0 },
+    { name:"Vainilla 1L", unit:"pieza", initial:1, min:0, cost:27 }
+  ],
 
-{
-name:"Cajeta Lata",
-unit:"pieza",
-initial:9,
-min:10,
-cost:35
-},
+  wip: [
+    { name:"Masa Galleta Chispas (Base)", unit:"kg", initial:0, min:2, cost:0 },
+    { name:"Mezcla Pay de Queso", unit:"pieza", initial:0, min:2, cost:0 },
+    { name:"Mezcla Brownie", unit:"pieza", initial:0, min:2, cost:0 },
+    { name:"Base Carlota de Limón", unit:"pieza", initial:0, min:2, cost:0 }
+  ],
 
-{
-name:"Cerveza Bud Light",
-unit:"pieza",
-initial:12,
-min:20,
-cost:12
-},
+  pt: [
+    { name:"Caja Galletas Chispas (135g)", unit:"caja", initial:0, min:5, cost:0 },
+    { name:"Bites Galletas Chispas", unit:"paquete", initial:0, min:5, cost:0 },
+    { name:"Pay de Queso (Rebanada)", unit:"pieza", initial:0, min:4, cost:0 },
+    { name:"Brownie Individual", unit:"pieza", initial:0, min:6, cost:0 },
+    { name:"Chocoflan (Rebanada)", unit:"pieza", initial:0, min:4, cost:0 }
+  ],
 
-{
-name:"Elote en lata",
-unit:"pieza",
-initial:5,
-min:0,
-cost:16
-},
+  emp: [
+    { name:"Caja Cartón Galletas", unit:"pieza", initial:0, min:20, cost:0 },
+    { name:"Bolsa Mylar / Celofán", unit:"pieza", initial:0, min:30, cost:0 },
+    { name:"Domo / Charola Rebanada", unit:"pieza", initial:0, min:25, cost:0 },
+    { name:"Etiqueta Adhesiva LUVAFE", unit:"pieza", initial:0, min:50, cost:0 },
+    { name:"Servilletas / Cucharas", unit:"paquete", initial:0, min:5, cost:0 }
+  ]
 
-{
-name:"Galletas Maria",
-unit:"pieza",
-initial:24,
-min:0,
-cost:14
-},
-
-{
-name:"Harina Blanca El Globo",
-unit:"kg",
-initial:14,
-min:12,
-cost:16
-},
-
-{
-name:"Harina Chocolate",
-unit:"pieza",
-initial:14,
-min:10,
-cost:50
-},
-
-{
-name:"Harina de Brownie",
-unit:"pieza",
-initial:3,
-min:5,
-cost:70
-},
-
-{
-name:"Leche Condensada La Lechera",
-unit:"pieza",
-initial:17,
-min:15,
-cost:26
-},
-
-{
-name:"Leche Evaporada Carnation",
-unit:"pieza",
-initial:16,
-min:15,
-cost:20
-},
-
-{
-name:"Limon",
-unit:"kg",
-initial:.5,
-min:0,
-cost:0
-},
-
-{
-name:"Manteca Crystal",
-unit:"pieza",
-initial:5.5,
-min:8,
-cost:54
-},
-
-{
-name:"Mantequilla",
-unit:"kg",
-initial:1,
-min:2,
-cost:0
-},
-
-{
-name:"Media Crema",
-unit:"pieza",
-initial:1,
-min:0,
-cost:0
-},
-
-{
-name:"Mermelada",
-unit:"pieza",
-initial:1,
-min:0,
-cost:0
-},
-
-{
-name:"Queso Crema",
-unit:"pieza",
-initial:18,
-min:15,
-cost:27
-},
-
-{
-name:"Sal",
-unit:"kg",
-initial:1,
-min:0,
-cost:0
-},
-
-{
-name:"Vainilla 1L",
-unit:"pieza",
-initial:1,
-min:0,
-cost:27
-}
-
-];
+};
 
 
 /* =========================================================
-   BASE DE DATOS LOCAL
+   BASE DE DATOS LOCAL (4 INVENTARIOS + VÍNCULOS)
 ========================================================= */
 
-const KEY =
-"luvafe_inventory_v1";
+const KEY = "luvafe_inventory_4stores_v1";
+
+let activeStore = "mp";
+
+
+function uid() {
+  try {
+    return crypto.randomUUID();
+  } catch (e) {
+    return String(Date.now() + "_" + Math.random().toString(36).slice(2));
+  }
+}
+
+
+function buildInitialDB() {
+  const stores = {};
+
+  Object.keys(STORES).forEach(storeKey => {
+    stores[storeKey] = {
+      items: (BASE_DATA[storeKey] || []).map(item => ({
+        ...item,
+        id: uid(),
+        in: 0,
+        out: 0
+      })),
+      moves: []
+    };
+  });
+
+  return {
+    stores,
+    links: []
+  };
+}
 
 
 let db = load();
 
 
 function load() {
-
   try {
-
-    const data =
-      localStorage.getItem(KEY);
-
-    if(data) {
-
-      return JSON.parse(data);
-
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.stores) {
+        Object.keys(STORES).forEach(k => {
+          if (!parsed.stores[k]) {
+            parsed.stores[k] = { items: [], moves: [] };
+          }
+        });
+        if (!Array.isArray(parsed.links)) parsed.links = [];
+        return parsed;
+      }
     }
 
-    return {
+    // Migración automática si existía la versión anterior de 1 solo inventario
+    const legacyRaw = localStorage.getItem("luvafe_inventory_v1");
+    if (legacyRaw) {
+      const legacy = JSON.parse(legacyRaw);
+      const fresh = buildInitialDB();
+      if (Array.isArray(legacy.items)) fresh.stores.mp.items = legacy.items;
+      if (Array.isArray(legacy.moves)) fresh.stores.mp.moves = legacy.moves;
+      return fresh;
+    }
 
-      items:
-        BASE_ITEMS.map(item => ({
-
-          ...item,
-
-          id:
-            crypto.randomUUID(),
-
-          in:0,
-
-          out:0
-
-        })),
-
-      moves:[]
-
-    };
-
+    return buildInitialDB();
+  } catch (error) {
+    return buildInitialDB();
   }
-
-  catch(error) {
-
-    return {
-
-      items:
-        BASE_ITEMS.map(item => ({
-
-          ...item,
-
-          id:
-            String(
-              Date.now()
-              +
-              Math.random()
-            ),
-
-          in:0,
-
-          out:0
-
-        })),
-
-      moves:[]
-
-    };
-
-  }
-
 }
 
 
 function save() {
-
-  localStorage.setItem(
-    KEY,
-    JSON.stringify(db)
-  );
-
+  localStorage.setItem(KEY, JSON.stringify(db));
   renderAll();
+}
 
+
+function getStore(key = activeStore) {
+  return db.stores[key];
 }
 
 
@@ -1606,93 +1664,116 @@ function save() {
 ========================================================= */
 
 function esc(value) {
-
   return String(value ?? "")
     .replace(/[&<>"']/g, match => ({
-
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;",
-      '"':"&quot;",
-      "'":"&#039;"
-
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
     }[match]));
-
 }
 
 
 function qty(value) {
-
   return Number(value || 0);
+}
 
+
+function roundQty(num) {
+  return Math.round((Number(num || 0) + Number.EPSILON) * 10000) / 10000;
 }
 
 
 function current(item) {
-
-  return (
+  return roundQty(
     qty(item.initial)
     +
     qty(item.in)
     -
     qty(item.out)
   );
-
 }
 
 
 function value(item) {
-
-  return (
-    current(item)
-    *
-    qty(item.cost)
-  );
-
+  return current(item) * qty(item.cost);
 }
 
 
 function money(number) {
-
   return "$" +
     Number(number || 0)
       .toLocaleString(
         "es-MX",
         {
-          minimumFractionDigits:2,
-          maximumFractionDigits:2
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
         }
       );
-
 }
 
 
 function fmtDate(date) {
-
   return new Date(date)
     .toLocaleString(
       "es-MX",
       {
-        dateStyle:"short",
-        timeStyle:"short"
+        dateStyle: "short",
+        timeStyle: "short"
       }
     );
+}
 
+
+function moveTypeLabel(type) {
+  const map = {
+    entrada: "Entrada / prod.",
+    salida: "Salida / consumo",
+    ajuste_mas: "Ajuste (+)",
+    ajuste_menos: "Ajuste (-)",
+    ajuste: "Ajuste"
+  };
+  return map[type] || type;
 }
 
 
 /* =========================================================
-   NAVEGACIÓN
+   CAMBIO DE ALMACÉN Y NAVEGACIÓN
 ========================================================= */
 
-function go(id) {
+function switchStore(storeKey) {
+  if (!STORES[storeKey]) return;
+  activeStore = storeKey;
 
+  document
+    .querySelectorAll(".storebtn")
+    .forEach(btn =>
+      btn.classList.toggle("active", btn.dataset.store === storeKey)
+    );
+
+  renderAll();
+
+  const activeTab = document.querySelector(".tab.active")?.id;
+  if (activeTab === "print") {
+    printMode("inventory");
+  }
+}
+
+
+document
+  .querySelectorAll(".storebtn")
+  .forEach(btn => {
+    btn.onclick = () => switchStore(btn.dataset.store);
+  });
+
+
+function go(id) {
   document
     .querySelectorAll(".tab")
     .forEach(tab =>
       tab.classList.remove("active")
     );
-
 
   document
     .querySelectorAll("nav button")
@@ -1700,35 +1781,29 @@ function go(id) {
       button.classList.remove("active")
     );
 
-
   document
     .getElementById(id)
     .classList.add("active");
 
-
   document
-    .querySelector(
-      `[data-tab="${id}"]`
-    )
+    .querySelector(`[data-tab="${id}"]`)
     .classList.add("active");
 
-
-  if(id === "print") {
-
+  if (id === "print") {
     printMode("inventory");
-
   }
 
+  if (id === "links") {
+    populateLinkSelects();
+    renderLinks();
+  }
 }
 
 
 document
   .querySelectorAll("nav button")
   .forEach(button => {
-
-    button.onclick = () =>
-      go(button.dataset.tab);
-
+    button.onclick = () => go(button.dataset.tab);
   });
 
 
@@ -1737,225 +1812,96 @@ document
 ========================================================= */
 
 function renderDashboard() {
+  const storeObj = getStore();
+  const storeInfo = STORES[activeStore];
 
-  const total =
-    db.items.length;
+  document.getElementById("storeSubtitle").textContent =
+    `CONTROL DE INVENTARIO · ${storeInfo.name.toUpperCase()}`;
 
+  document.getElementById("dashTitle").textContent =
+    `Resumen · ${storeInfo.name}`;
 
-  const buy =
-    db.items.filter(
-      item =>
-        current(item)
-        <=
-        qty(item.min)
-    ).length;
+  document.getElementById("invTitle").textContent =
+    `Inventario · ${storeInfo.name}`;
 
+  document.getElementById("movesTitle").textContent =
+    `Registrar movimiento · ${storeInfo.name}`;
 
-  const inventoryValue =
-    db.items.reduce(
-      (sum,item) =>
-        sum + value(item),
-      0
-    );
+  const total = storeObj.items.length;
 
+  const buy = storeObj.items.filter(
+    item => current(item) <= qty(item.min)
+  ).length;
 
-  const units =
-    db.items.reduce(
-      (sum,item) =>
-        sum + current(item),
-      0
-    );
+  const inventoryValue = storeObj.items.reduce(
+    (sum, item) => sum + value(item),
+    0
+  );
 
+  const units = storeObj.items.reduce(
+    (sum, item) => sum + current(item),
+    0
+  );
 
   document
     .getElementById("kpis")
     .innerHTML = [
-
-      [
-        "Materias primas",
-        total,
-        ""
-      ],
-
-      [
-        "Por comprar",
-        buy,
-        buy ? "buy" : ""
-      ],
-
-      [
-        "Valor inventario",
-        money(inventoryValue),
-        ""
-      ],
-
-      [
-        "Existencias",
-        units.toLocaleString("es-MX"),
-        ""
-      ]
-
+      ["Artículos en catálogo", total, ""],
+      ["Por reponer / comprar", buy, buy ? "buy" : ""],
+      ["Valor del inventario", money(inventoryValue), ""],
+      ["Existencias totales", units.toLocaleString("es-MX"), ""]
     ]
     .map(item => `
-
       <div class="card kpi">
-
-        <div class="label">
-          ${item[0]}
-        </div>
-
-        <div class="value ${item[2]}">
-          ${item[1]}
-        </div>
-
+        <div class="label">${item[0]}</div>
+        <div class="value ${item[2]}">${item[1]}</div>
       </div>
-
     `)
     .join("");
 
-
-  const list =
-    db.items
-      .filter(
-        item =>
-          current(item)
-          <=
-          qty(item.min)
-      )
-      .sort(
-        (a,b) =>
-          current(a)
-          -
-          current(b)
-      );
-
+  const list = storeObj.items
+    .filter(item => current(item) <= qty(item.min))
+    .sort((a, b) => current(a) - current(b));
 
   document
     .getElementById("buyAlert")
     .innerHTML = buy
-
-      ?
-
-      `<div class="alert">
-
-        <b>
-          ${buy} materia(s) requieren revisión.
-        </b>
-
-        El sistema las marca para compra
-        cuando el stock actual es igual
-        o menor al mínimo.
-
-      </div>`
-
-      :
-
-      `<div class="notice">
-
-        No hay materias por debajo
-        del mínimo configurado.
-
-      </div>`;
-
+      ? `<div class="alert">
+          <b>${buy} artículo(s) en ${esc(storeInfo.name)} requieren revisión.</b>
+          El sistema los marca cuando el stock actual es igual o menor al mínimo.
+        </div>`
+      : `<div class="notice">
+          No hay artículos por debajo del mínimo configurado en <b>${esc(storeInfo.name)}</b>.
+        </div>`;
 
   document
     .getElementById("buyList")
-    .innerHTML =
-
-    list.length
-
-      ?
-
-      `
-
+    .innerHTML = list.length
+      ? `
       <table>
-
         <thead>
-
           <tr>
-
-            <th>
-              Materia
-            </th>
-
-            <th>
-              Actual
-            </th>
-
-            <th>
-              Mínimo
-            </th>
-
-            <th>
-              Costo
-            </th>
-
-            <th>
-              Valor faltante aprox.
-            </th>
-
+            <th>Artículo</th>
+            <th>Actual</th>
+            <th>Mínimo</th>
+            <th>Costo</th>
+            <th>Valor faltante aprox.</th>
           </tr>
-
         </thead>
-
         <tbody>
-
-          ${
-
-            list.map(item => `
-
-              <tr>
-
-                <td>
-                  ${esc(item.name)}
-                </td>
-
-                <td>
-                  ${current(item)}
-                  ${esc(item.unit)}
-                </td>
-
-                <td>
-                  ${item.min}
-                </td>
-
-                <td>
-                  ${money(item.cost)}
-                </td>
-
-                <td>
-                  ${
-                    money(
-                      Math.max(
-                        0,
-                        item.min
-                        -
-                        current(item)
-                      )
-                      *
-                      qty(item.cost)
-                    )
-                  }
-                </td>
-
-              </tr>
-
-            `).join("")
-
-          }
-
+          ${list.map(item => `
+            <tr>
+              <td>${esc(item.name)}</td>
+              <td>${current(item)} ${esc(item.unit)}</td>
+              <td>${item.min}</td>
+              <td>${money(item.cost)}</td>
+              <td>${money(Math.max(0, item.min - current(item)) * qty(item.cost))}</td>
+            </tr>
+          `).join("")}
         </tbody>
-
       </table>
-
       `
-
-      :
-
-      `<p class="muted">
-        No hay compras sugeridas.
-      </p>`;
-
+      : `<p class="muted">No hay reposiciones sugeridas en este almacén.</p>`;
 }
 
 
@@ -1964,677 +1910,455 @@ function renderDashboard() {
 ========================================================= */
 
 function renderInventory() {
+  const storeObj = getStore();
+  const search = (document.getElementById("invSearch")?.value || "").toLowerCase();
 
-  const search =
-    (
-      document
-        .getElementById("invSearch")
-        ?.value
-      ||
-      ""
-    )
-    .toLowerCase();
-
-
-  const items =
-    db.items.filter(
-      item =>
-        item.name
-          .toLowerCase()
-          .includes(search)
-    );
-
+  const items = storeObj.items.filter(
+    item => item.name.toLowerCase().includes(search)
+  );
 
   document
     .getElementById("invBody")
-    .innerHTML =
-
-    items.map(item => {
-
-      const stock =
-        current(item);
-
-      const needsBuy =
-        stock
-        <=
-        qty(item.min);
-
+    .innerHTML = items.map(item => {
+      const stock = current(item);
+      const needsBuy = stock <= qty(item.min);
+      const hasLinks = db.links.some(
+        l => (l.targetStore === activeStore && l.targetItemId === item.id)
+          || (l.sourceStore === activeStore && l.sourceItemId === item.id)
+      );
 
       return `
-
       <tr>
-
         <td>
-
           <input
             value="${esc(item.name)}"
-            onchange="
-              editItem(
-                '${item.id}',
-                'name',
-                this.value
-              )
-            "
+            onchange="editItem('${item.id}','name',this.value)"
           >
-
+          ${hasLinks ? `<span class="badge" style="margin-top:4px">Entrelazado</span>` : ""}
         </td>
 
-
         <td>
-
-          <select
-            onchange="
-              editItem(
-                '${item.id}',
-                'unit',
-                this.value
-              )
-            "
-          >
-
-            ${
-              [
-                "pieza",
-                "kg",
-                "g",
-                "L",
-                "ml",
-                "caja",
-                "paquete"
-              ]
-              .map(unit => `
-
-                <option
-                  ${
-                    item.unit === unit
-                    ? "selected"
-                    : ""
-                  }
-                >
-                  ${unit}
-                </option>
-
-              `)
-              .join("")
-            }
-
+          <select onchange="editItem('${item.id}','unit',this.value)">
+            ${["pieza","kg","g","L","ml","caja","paquete"]
+              .map(unit => `<option ${item.unit === unit ? "selected" : ""}>${unit}</option>`)
+              .join("")}
           </select>
-
         </td>
 
-
         <td>
-
           <input
             type="number"
             step=".01"
             value="${item.initial}"
-            onchange="
-              editItem(
-                '${item.id}',
-                'initial',
-                this.value
-              )
-            "
+            onchange="editItem('${item.id}','initial',this.value)"
           >
-
         </td>
 
+        <td>${roundQty(item.in)}</td>
+        <td>${roundQty(item.out)}</td>
+        <td><b>${stock}</b></td>
 
         <td>
-          ${qty(item.in)}
-        </td>
-
-
-        <td>
-          ${qty(item.out)}
-        </td>
-
-
-        <td>
-
-          <b>
-            ${stock}
-          </b>
-
-        </td>
-
-
-        <td>
-
           <input
             type="number"
             step=".01"
             value="${item.min}"
-            onchange="
-              editItem(
-                '${item.id}',
-                'min',
-                this.value
-              )
-            "
+            onchange="editItem('${item.id}','min',this.value)"
           >
-
         </td>
 
-
-        <td
-          class="status
-          ${needsBuy ? "buy" : "ok"}"
-        >
-
-          ${
-            needsBuy
-            ? "COMPRAR"
-            : "OK"
-          }
-
+        <td class="status ${needsBuy ? "buy" : "ok"}">
+          ${needsBuy ? "REPONER" : "OK"}
         </td>
-
 
         <td>
-
           <input
             type="number"
             step=".01"
             value="${item.cost}"
-            onchange="
-              editItem(
-                '${item.id}',
-                'cost',
-                this.value
-              )
-            "
+            onchange="editItem('${item.id}','cost',this.value)"
           >
-
         </td>
 
+        <td>${money(value(item))}</td>
 
         <td>
-          ${money(value(item))}
-        </td>
-
-
-        <td>
-
-          <button
-            class="btn"
-            onclick="
-              delItem('${item.id}')
-            "
-          >
+          <button class="btn" onclick="delItem('${item.id}')">
             Eliminar
           </button>
-
         </td>
-
       </tr>
-
       `;
-
-    })
-    .join("");
-
+    }).join("");
 }
 
 
-function editItem(
-  id,
-  key,
-  value
-) {
+function editItem(id, key, val) {
+  const storeObj = getStore();
+  const item = storeObj.items.find(x => x.id === id);
+  if (!item) return;
 
-  const item =
-    db.items.find(
-      x =>
-        x.id === id
-    );
-
-
-  if(!item)
-    return;
-
-
-  item[key] =
-    (
-      key === "name"
-      ||
-      key === "unit"
-    )
-      ?
-      value
-      :
-      qty(value);
-
-
+  item[key] = (key === "name" || key === "unit") ? val : qty(val);
   save();
-
 }
 
 
 function newItem() {
+  const storeInfo = STORES[activeStore];
+  const name = prompt(`Nombre del nuevo artículo en ${storeInfo.name}:`);
+  if (!name) return;
 
-  const name =
-    prompt(
-      "Nombre de la materia prima:"
-    );
-
-
-  if(!name)
-    return;
-
-
-  db.items.push({
-
-    id:
-      crypto.randomUUID(),
-
-    name:
-      name.trim(),
-
-    unit:
-      "pieza",
-
-    initial:0,
-
-    min:0,
-
-    cost:0,
-
-    in:0,
-
-    out:0
-
+  getStore().items.push({
+    id: uid(),
+    name: name.trim(),
+    unit: "pieza",
+    initial: 0,
+    min: 0,
+    cost: 0,
+    in: 0,
+    out: 0
   });
 
-
   save();
-
   go("inventory");
-
 }
 
 
 function delItem(id) {
+  const storeObj = getStore();
+  const item = storeObj.items.find(x => x.id === id);
+  if (!item) return;
 
-  const item =
-    db.items.find(
-      x =>
-        x.id === id
+  if (confirm(`¿Eliminar "${item.name}" de ${STORES[activeStore].name}?`)) {
+    storeObj.items = storeObj.items.filter(x => x.id !== id);
+    db.links = db.links.filter(
+      l => !(l.targetStore === activeStore && l.targetItemId === id)
+        && !(l.sourceStore === activeStore && l.sourceItemId === id)
     );
-
-
-  if(!item)
-    return;
-
-
-  if(
-    confirm(
-      `Eliminar "${item.name}"?`
-    )
-  ) {
-
-    db.items =
-      db.items.filter(
-        x =>
-          x.id !== id
-      );
-
     save();
-
   }
-
 }
 
 
 /* =========================================================
-   SELECTOR DE MATERIAS
+   SELECTOR DE ARTÍCULOS EN MOVIMIENTOS
 ========================================================= */
 
 function populateSelect() {
+  const select = document.getElementById("mItem");
+  if (!select) return;
 
-  const select =
-    document.getElementById(
-      "mItem"
-    );
+  const storeObj = getStore();
 
-
-  if(!select)
-    return;
-
-
-  select.innerHTML =
-    db.items
-      .map(item => `
-
-        <option
-          value="${item.id}"
-        >
-          ${esc(item.name)}
-          (${esc(item.unit)})
+  select.innerHTML = storeObj.items.length
+    ? storeObj.items.map(item => `
+        <option value="${item.id}">
+          ${esc(item.name)} (${esc(item.unit)}) — Stock: ${current(item)}
         </option>
+      `).join("")
+    : `<option value="">Sin artículos en este inventario</option>`;
 
-      `)
-      .join("");
-
-
-  document
-    .getElementById("mDate")
-    .value =
-      new Date(
-        Date.now()
-        -
-        new Date()
-          .getTimezoneOffset()
-        *
-        60000
-      )
+  document.getElementById("mDate").value =
+    new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
       .toISOString()
-      .slice(0,16);
-
+      .slice(0, 16);
 }
 
 
 /* =========================================================
-   MOVIMIENTOS
+   MOTOR DE ENTRELAZADO ENTRE INVENTARIOS
+========================================================= */
+
+function populateLinkSelects() {
+  const targetStoreSel = document.getElementById("lTargetStore");
+  const sourceStoreSel = document.getElementById("lSourceStore");
+  const targetItemSel  = document.getElementById("lTargetItem");
+  const sourceItemSel  = document.getElementById("lSourceItem");
+
+  if (!targetStoreSel || !sourceStoreSel) return;
+
+  if (!targetStoreSel.options.length) {
+    const storeOptions = Object.entries(STORES)
+      .map(([k, info]) => `<option value="${k}">${esc(info.name)}</option>`)
+      .join("");
+    targetStoreSel.innerHTML = storeOptions;
+    sourceStoreSel.innerHTML = storeOptions;
+    targetStoreSel.value = "pt";
+    sourceStoreSel.value = "mp";
+  }
+
+  const tStoreKey = targetStoreSel.value;
+  const sStoreKey = sourceStoreSel.value;
+
+  targetItemSel.innerHTML = (db.stores[tStoreKey]?.items || [])
+    .map(i => `<option value="${i.id}">${esc(i.name)} (${esc(i.unit)})</option>`)
+    .join("");
+
+  sourceItemSel.innerHTML = (db.stores[sStoreKey]?.items || [])
+    .map(i => `<option value="${i.id}">${esc(i.name)} (${esc(i.unit)})</option>`)
+    .join("");
+}
+
+
+function addLink() {
+  const targetStore  = document.getElementById("lTargetStore").value;
+  const targetItemId = document.getElementById("lTargetItem").value;
+  const sourceStore  = document.getElementById("lSourceStore").value;
+  const sourceItemId = document.getElementById("lSourceItem").value;
+  const ratio        = qty(document.getElementById("lRatio").value);
+
+  if (!targetItemId || !sourceItemId) {
+    alert("Selecciona ambos artículos (Destino y Origen).");
+    return;
+  }
+
+  if (targetStore === sourceStore && targetItemId === sourceItemId) {
+    alert("Un artículo no puede entrelazarse consigo mismo.");
+    return;
+  }
+
+  if (ratio <= 0) {
+    alert("Captura una proporción mayor que cero.");
+    return;
+  }
+
+  db.links.push({
+    id: uid(),
+    targetStore,
+    targetItemId,
+    sourceStore,
+    sourceItemId,
+    ratio
+  });
+
+  document.getElementById("lRatio").value = "";
+  save();
+}
+
+
+function delLink(id) {
+  if (confirm("¿Eliminar esta regla de entrelazado?")) {
+    db.links = db.links.filter(l => l.id !== id);
+    save();
+  }
+}
+
+
+function renderLinks() {
+  const tbody = document.getElementById("linksBody");
+  if (!tbody) return;
+
+  if (!db.links.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="muted">
+          Aún no hay vínculos configurados. Crea uno arriba para entrelazar tus inventarios.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = db.links.map(link => {
+    const tStore = STORES[link.targetStore];
+    const sStore = STORES[link.sourceStore];
+    const tItem  = db.stores[link.targetStore]?.items.find(i => i.id === link.targetItemId);
+    const sItem  = db.stores[link.sourceStore]?.items.find(i => i.id === link.sourceItemId);
+
+    return `
+      <tr>
+        <td><span class="badge">${esc(tStore?.name || link.targetStore)}</span></td>
+        <td><b>${esc(tItem?.name || "Artículo eliminado")}</b> (${esc(tItem?.unit || "")})</td>
+        <td><span class="badge">${esc(sStore?.name || link.sourceStore)}</span></td>
+        <td>${esc(sItem?.name || "Artículo eliminado")} (${esc(sItem?.unit || "")})</td>
+        <td><b>${link.ratio}</b> ${esc(sItem?.unit || "")} por 1 ${esc(tItem?.unit || "unid.")}</td>
+        <td>
+          <button class="btn" onclick="delLink('${link.id}')">Eliminar</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+
+/* =========================================================
+   MOVIMIENTOS (CON DESCUENTO AUTOMÁTICO ENTRE INVENTARIOS)
 ========================================================= */
 
 function addMove() {
+  const storeObj = getStore();
+  const itemId = document.getElementById("mItem").value;
+  const type   = document.getElementById("mType").value;
+  const amount = qty(document.getElementById("mQty").value);
 
-  const itemId =
-    document
-      .getElementById("mItem")
-      .value;
-
-
-  const type =
-    document
-      .getElementById("mType")
-      .value;
-
-
-  const amount =
-    qty(
-      document
-        .getElementById("mQty")
-        .value
-    );
-
-
-  if(
-    !itemId
-    ||
-    amount <= 0
-  ) {
-
-    alert(
-      "Captura una cantidad mayor que cero."
-    );
-
+  if (!itemId || amount <= 0) {
+    alert("Captura un artículo y una cantidad mayor que cero.");
     return;
-
   }
 
+  const item = storeObj.items.find(x => x.id === itemId);
+  if (!item) return;
 
-  const item =
-    db.items.find(
-      x =>
-        x.id === itemId
-    );
-
-
-  if(
-    type === "salida"
-    &&
-    amount > current(item)
-  ) {
-
-    if(
-      !confirm(
-        `La salida supera el stock actual (${current(item)} ${item.unit}). ¿Registrar de todos modos?`
-      )
-    ) {
-
+  if ((type === "salida" || type === "ajuste_menos") && amount > current(item)) {
+    if (!confirm(`La salida supera el stock actual (${current(item)} ${item.unit}). ¿Registrar de todos modos?`)) {
       return;
-
     }
-
   }
 
+  // Verificar si es entrada/producción con vínculos activos
+  const activeLinks = (type === "entrada")
+    ? db.links.filter(l => l.targetStore === activeStore && l.targetItemId === itemId)
+    : [];
 
-  if(type === "entrada") {
+  if (activeLinks.length > 0) {
+    const summaryLines = activeLinks.map(l => {
+      const sItem = db.stores[l.sourceStore]?.items.find(i => i.id === l.sourceItemId);
+      const needed = roundQty(amount * qty(l.ratio));
+      return `• ${STORES[l.sourceStore].name}: -${needed} ${sItem?.unit || ""} de ${sItem?.name || "Insumo"}`;
+    }).join("\n");
 
-    item.in += amount;
-
+    if (!confirm(`Este artículo está entrelazado. Al registrar +${amount} ${item.unit} de "${item.name}", se descontará automáticamente:\n\n${summaryLines}\n\n¿Continuar?`)) {
+      return;
+    }
   }
 
-  else if(type === "salida") {
-
-    item.out += amount;
-
+  if (type === "entrada" || type === "ajuste_mas") {
+    item.in = roundQty(qty(item.in) + amount);
+  } else if (type === "salida" || type === "ajuste_menos") {
+    item.out = roundQty(qty(item.out) + amount);
   }
 
+  const cost = qty(document.getElementById("mCost").value) || item.cost;
 
-  const cost =
-    qty(
-      document
-        .getElementById("mCost")
-        .value
-    )
-    ||
-    item.cost;
-
-
-  if(
-    type === "entrada"
-    &&
-    cost > 0
-  ) {
-
+  if (type === "entrada" && cost > 0) {
     item.cost = cost;
-
   }
 
+  const moveDate = document.getElementById("mDate").value || new Date().toISOString();
+  const note = document.getElementById("mNote").value.trim();
+  const batchGroupId = uid();
 
-  db.moves.unshift({
+  // Aplicar consumos automáticos en los inventarios origen
+  for (const link of activeLinks) {
+    const sourceStoreObj = db.stores[link.sourceStore];
+    const sourceItem = sourceStoreObj?.items.find(i => i.id === link.sourceItemId);
+    if (!sourceItem) continue;
 
-    id:
-      crypto.randomUUID(),
+    const needed = roundQty(amount * qty(link.ratio));
+    sourceItem.out = roundQty(qty(sourceItem.out) + needed);
 
-    date:
-      document
-        .getElementById("mDate")
-        .value
-      ||
-      new Date().toISOString(),
+    sourceStoreObj.moves.unshift({
+      id: uid(),
+      linkedGroup: batchGroupId,
+      autoLinked: true,
+      date: moveDate,
+      item: sourceItem.id,
+      type: "salida",
+      qty: needed,
+      cost: sourceItem.cost,
+      note: `Consumo auto por ${STORES[activeStore].code}: ${item.name} (+${amount} ${item.unit})${note ? " · " + note : ""}`
+    });
+  }
 
-    item:
-      itemId,
-
+  storeObj.moves.unshift({
+    id: uid(),
+    linkedGroup: activeLinks.length ? batchGroupId : null,
+    date: moveDate,
+    item: itemId,
     type,
-
-    qty:
-      amount,
-
+    qty: amount,
     cost,
-
-    note:
-      document
-        .getElementById("mNote")
-        .value
-        .trim()
-
+    note
   });
 
-
   clearMove();
-
   save();
-
   go("moves");
-
 }
 
 
 function clearMove() {
-
-  document
-    .getElementById("mQty")
-    .value = "";
-
-
-  document
-    .getElementById("mCost")
-    .value = "";
-
-
-  document
-    .getElementById("mNote")
-    .value = "";
-
+  document.getElementById("mQty").value = "";
+  document.getElementById("mCost").value = "";
+  document.getElementById("mNote").value = "";
 }
 
 
 /* =========================================================
-   HISTORIAL
+   HISTORIAL DE MOVIMIENTOS
 ========================================================= */
 
 function renderMoves() {
+  const storeObj = getStore();
 
   document
     .getElementById("movesBody")
-    .innerHTML =
+    .innerHTML = storeObj.moves.map(move => {
+      const item = storeObj.items.find(x => x.id === move.item);
 
-    db.moves
-      .map(move => {
-
-        const item =
-          db.items.find(
-            x =>
-              x.id === move.item
-          );
-
-
-        return `
-
-        <tr>
-
-          <td>
-            ${fmtDate(move.date)}
-          </td>
-
-          <td>
-            ${esc(
-              item?.name
-              ||
-              "Eliminada"
-            )}
-          </td>
-
-          <td>
-            ${move.type}
-          </td>
-
-          <td>
-
-            ${move.qty}
-            ${esc(
-              item?.unit
-              ||
-              ""
-            )}
-
-          </td>
-
-          <td>
-            ${money(move.cost)}
-          </td>
-
-          <td>
-            ${esc(move.note)}
-          </td>
-
-          <td>
-
-            <button
-              class="btn"
-              onclick="
-                delMove('${move.id}')
-              "
-            >
-              Eliminar
-            </button>
-
-          </td>
-
-        </tr>
-
-        `;
-
-      })
-      .join("");
-
+      return `
+      <tr>
+        <td>${fmtDate(move.date)}</td>
+        <td>${esc(item?.name || "Artículo eliminado")}</td>
+        <td>${moveTypeLabel(move.type)}</td>
+        <td>${move.qty} ${esc(item?.unit || "")}</td>
+        <td>${money(move.cost)}</td>
+        <td>${esc(move.note)}</td>
+        <td>
+          <button class="btn" onclick="delMove('${move.id}')">
+            Eliminar
+          </button>
+        </td>
+      </tr>
+      `;
+    }).join("");
 }
 
 
 function delMove(id) {
+  const storeObj = getStore();
+  const move = storeObj.moves.find(x => x.id === id);
+  if (!move) return;
 
-  const move =
-    db.moves.find(
-      x =>
-        x.id === id
-    );
+  const hasGroup = Boolean(move.linkedGroup);
+  const msg = hasGroup
+    ? "¿Eliminar este movimiento y revertir tanto su stock como los consumos automáticos entrelazados en otros inventarios?"
+    : "¿Eliminar este movimiento y revertir su efecto en el stock?";
 
+  if (!confirm(msg)) return;
 
-  if(!move)
-    return;
+  if (hasGroup) {
+    // Revertir en todos los almacenes que pertenezcan al mismo grupo entrelazado
+    Object.keys(STORES).forEach(sKey => {
+      const sObj = db.stores[sKey];
+      const groupMoves = sObj.moves.filter(m => m.linkedGroup === move.linkedGroup);
 
+      groupMoves.forEach(gm => {
+        const it = sObj.items.find(x => x.id === gm.item);
+        if (it) {
+          if (gm.type === "entrada" || gm.type === "ajuste_mas") {
+            it.in = roundQty(qty(it.in) - qty(gm.qty));
+          } else if (gm.type === "salida" || gm.type === "ajuste_menos") {
+            it.out = roundQty(qty(it.out) - qty(gm.qty));
+          }
+        }
+      });
 
-  if(
-    confirm(
-      "Eliminar este movimiento y revertir su efecto en el stock?"
-    )
-  ) {
-
-    const item =
-      db.items.find(
-        x =>
-          x.id === move.item
-      );
-
-
-    if(item) {
-
-      if(
-        move.type === "entrada"
-      ) {
-
-        item.in -= move.qty;
-
+      sObj.moves = sObj.moves.filter(m => m.linkedGroup !== move.linkedGroup);
+    });
+  } else {
+    const item = storeObj.items.find(x => x.id === move.item);
+    if (item) {
+      if (move.type === "entrada" || move.type === "ajuste_mas") {
+        item.in = roundQty(qty(item.in) - qty(move.qty));
+      } else if (move.type === "salida" || move.type === "ajuste_menos") {
+        item.out = roundQty(qty(item.out) - qty(move.qty));
       }
-
-      else if(
-        move.type === "salida"
-      ) {
-
-        item.out -= move.qty;
-
-      }
-
     }
-
-
-    db.moves =
-      db.moves.filter(
-        x =>
-          x.id !== id
-      );
-
-
-    save();
-
+    storeObj.moves = storeObj.moves.filter(x => x.id !== id);
   }
 
+  save();
 }
 
 
@@ -2642,718 +2366,250 @@ function delMove(id) {
    IMPRESIÓN
 ========================================================= */
 
+function inventoryTableHTML(storeKey = activeStore) {
+  const storeObj = db.stores[storeKey];
+
+  return `
+    <table>
+      <thead>
+        <tr>
+          <th>Artículo</th>
+          <th>Unidad</th>
+          <th>Inicial</th>
+          <th>Entradas</th>
+          <th>Salidas</th>
+          <th>Actual</th>
+          <th>Mínimo</th>
+          <th>Estado</th>
+          <th>Costo unit.</th>
+          <th>Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${storeObj.items.map(item => `
+          <tr>
+            <td>${esc(item.name)}</td>
+            <td>${esc(item.unit)}</td>
+            <td>${item.initial}</td>
+            <td>${roundQty(item.in)}</td>
+            <td>${roundQty(item.out)}</td>
+            <td><b>${current(item)}</b></td>
+            <td>${item.min}</td>
+            <td>${current(item) <= qty(item.min) ? "REPONER" : "OK"}</td>
+            <td>${money(item.cost)}</td>
+            <td>${money(value(item))}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+
 function printMode(mode) {
+  const area = document.getElementById("printArea");
+  const storeObj = getStore();
+  const storeInfo = STORES[activeStore];
 
-  const area =
-    document.getElementById(
-      "printArea"
-    );
-
+  document.getElementById("printTitle").textContent =
+    `Reporte de inventario · LUVAFE (${storeInfo.name})`;
 
   document
     .querySelectorAll(".tab")
-    .forEach(tab =>
-      tab.classList.remove(
-        "print-active"
-      )
-    );
-
+    .forEach(tab => tab.classList.remove("print-active"));
 
   document
     .getElementById("print")
-    .classList.add(
-      "print-active"
-    );
+    .classList.add("print-active");
 
-
-  if(
-    mode === "inventory"
-  ) {
-
+  if (mode === "inventory") {
     area.innerHTML = `
-
-      <h2>
-        Inventario actual
-      </h2>
-
-      <p>
-        Fecha:
-        ${new Date().toLocaleString("es-MX")}
-      </p>
-
-      ${inventoryTable()}
-
+      <h2>Inventario actual · ${esc(storeInfo.name)}</h2>
+      <p>Fecha: ${new Date().toLocaleString("es-MX")}</p>
+      ${inventoryTableHTML(activeStore)}
     `;
-
   }
 
-
-  if(
-    mode === "purchases"
-  ) {
-
-    const items =
-      db.items.filter(
-        item =>
-          current(item)
-          <=
-          qty(item.min)
-      );
-
+  if (mode === "purchases") {
+    const items = storeObj.items.filter(item => current(item) <= qty(item.min));
 
     area.innerHTML = `
-
-      <h2>
-        Lista de compras
-      </h2>
-
-      <p>
-        Fecha:
-        ${new Date().toLocaleString("es-MX")}
-      </p>
-
+      <h2>Lista de compras / reposición · ${esc(storeInfo.name)}</h2>
+      <p>Fecha: ${new Date().toLocaleString("es-MX")}</p>
       <table>
-
         <thead>
-
           <tr>
-
-            <th>
-              Materia
-            </th>
-
-            <th>
-              Unidad
-            </th>
-
-            <th>
-              Actual
-            </th>
-
-            <th>
-              Mínimo
-            </th>
-
-            <th>
-              Sugerido
-            </th>
-
-            <th>
-              Costo estimado
-            </th>
-
+            <th>Artículo</th>
+            <th>Unidad</th>
+            <th>Actual</th>
+            <th>Mínimo</th>
+            <th>Sugerido</th>
+            <th>Costo estimado</th>
           </tr>
-
         </thead>
-
         <tbody>
-
-          ${
-
-            items
-              .map(item => {
-
-                const amount =
-                  Math.max(
-                    0,
-                    item.min
-                    -
-                    current(item)
-                  );
-
-
-                return `
-
-                <tr>
-
-                  <td>
-                    ${esc(item.name)}
-                  </td>
-
-                  <td>
-                    ${item.unit}
-                  </td>
-
-                  <td>
-                    ${current(item)}
-                  </td>
-
-                  <td>
-                    ${item.min}
-                  </td>
-
-                  <td>
-                    ${amount}
-                  </td>
-
-                  <td>
-                    ${money(
-                      amount
-                      *
-                      item.cost
-                    )}
-                  </td>
-
-                </tr>
-
-                `;
-
-              })
-              .join("")
-
-          }
-
+          ${items.map(item => {
+            const amount = Math.max(0, item.min - current(item));
+            return `
+              <tr>
+                <td>${esc(item.name)}</td>
+                <td>${esc(item.unit)}</td>
+                <td>${current(item)}</td>
+                <td>${item.min}</td>
+                <td>${amount}</td>
+                <td>${money(amount * item.cost)}</td>
+              </tr>
+            `;
+          }).join("")}
         </tbody>
-
       </table>
-
     `;
-
   }
 
-
-  if(
-    mode === "moves"
-  ) {
-
+  if (mode === "moves") {
     area.innerHTML = `
-
-      <h2>
-        Movimientos
-      </h2>
-
-      <p>
-        Fecha:
-        ${new Date().toLocaleString("es-MX")}
-      </p>
-
+      <h2>Historial de movimientos · ${esc(storeInfo.name)}</h2>
+      <p>Fecha: ${new Date().toLocaleString("es-MX")}</p>
       <table>
-
         <thead>
-
           <tr>
-
             <th>Fecha</th>
-            <th>Materia</th>
+            <th>Artículo</th>
             <th>Tipo</th>
             <th>Cantidad</th>
             <th>Costo</th>
             <th>Notas</th>
-
           </tr>
-
         </thead>
-
         <tbody>
-
-          ${
-
-            db.moves
-              .map(move => {
-
-                const item =
-                  db.items.find(
-                    x =>
-                      x.id === move.item
-                  );
-
-
-                return `
-
-                <tr>
-
-                  <td>
-                    ${fmtDate(move.date)}
-                  </td>
-
-                  <td>
-                    ${esc(item?.name)}
-                  </td>
-
-                  <td>
-                    ${move.type}
-                  </td>
-
-                  <td>
-                    ${move.qty}
-                    ${item?.unit || ""}
-                  </td>
-
-                  <td>
-                    ${money(move.cost)}
-                  </td>
-
-                  <td>
-                    ${esc(move.note)}
-                  </td>
-
-                </tr>
-
-                `;
-
-              })
-              .join("")
-
-          }
-
-        </tbody>
-
-      </table>
-
-    `;
-
-  }
-
-}
-
-
-function inventoryTable() {
-
-  return `
-
-    <table>
-
-      <thead>
-
-        <tr>
-
-          <th>
-            Materia prima
-          </th>
-
-          <th>
-            Unidad
-          </th>
-
-          <th>
-            Actual
-          </th>
-
-          <th>
-            Mínimo
-          </th>
-
-          <th>
-            Estado
-          </th>
-
-          <th>
-            Costo
-          </th>
-
-          <th>
-            Valor
-          </th>
-
-        </tr>
-
-      </thead>
-
-      <tbody>
-
-        ${
-
-          db.items
-            .map(item => `
-
+          ${storeObj.moves.map(move => {
+            const item = storeObj.items.find(x => x.id === move.item);
+            return `
               <tr>
-
-                <td>
-                  ${esc(item.name)}
-                </td>
-
-                <td>
-                  ${esc(item.unit)}
-                </td>
-
-                <td>
-                  ${current(item)}
-                </td>
-
-                <td>
-                  ${item.min}
-                </td>
-
-                <td>
-
-                  ${
-                    current(item)
-                    <=
-                    item.min
-                    ?
-                    "COMPRAR"
-                    :
-                    "OK"
-                  }
-
-                </td>
-
-                <td>
-                  ${money(item.cost)}
-                </td>
-
-                <td>
-                  ${money(value(item))}
-                </td>
-
+                <td>${fmtDate(move.date)}</td>
+                <td>${esc(item?.name || "Eliminada")}</td>
+                <td>${moveTypeLabel(move.type)}</td>
+                <td>${move.qty} ${esc(item?.unit || "")}</td>
+                <td>${money(move.cost)}</td>
+                <td>${esc(move.note)}</td>
               </tr>
-
-            `)
-            .join("")
-
-        }
-
-      </tbody>
-
-    </table>
-
-  `;
-
-}
-
-
-/* =========================================================
-   RESPALDO
-========================================================= */
-
-function backup() {
-
-  const data = {
-
-    app:
-      "LUVAFE Inventario",
-
-    version:
-      1,
-
-    exportedAt:
-      new Date().toISOString(),
-
-    ...db
-
-  };
-
-
-  const blob =
-    new Blob(
-      [
-        JSON.stringify(
-          data,
-          null,
-          2
-        )
-      ],
-      {
-        type:
-          "application/json"
-      }
-    );
-
-
-  downloadBlob(
-    blob,
-    `LUVAFE_respaldo_${
-      new Date()
-        .toISOString()
-        .slice(0,10)
-    }.json`
-  );
-
-}
-
-
-/* =========================================================
-   RESTAURAR
-========================================================= */
-
-function restore(event) {
-
-  const file =
-    event.target.files[0];
-
-
-  if(!file)
-    return;
-
-
-  const reader =
-    new FileReader();
-
-
-  reader.onload = () => {
-
-    try {
-
-      const data =
-        JSON.parse(
-          reader.result
-        );
-
-
-      if(
-        !Array.isArray(data.items)
-        ||
-        !Array.isArray(data.moves)
-      ) {
-
-        throw new Error();
-
-      }
-
-
-      if(
-        confirm(
-          "Esto reemplazará los datos actuales. ¿Continuar?"
-        )
-      ) {
-
-        db = {
-
-          items:
-            data.items,
-
-          moves:
-            data.moves
-
-        };
-
-
-        save();
-
-
-        alert(
-          "Respaldo restaurado."
-        );
-
-      }
-
-    }
-
-    catch(error) {
-
-      alert(
-        "El archivo no es un respaldo válido de LUVAFE."
-      );
-
-    }
-
-  };
-
-
-  reader.readAsText(file);
-
-}
-
-
-/* =========================================================
-   RESTABLECER
-========================================================= */
-
-function resetAll() {
-
-  if(
-    confirm(
-      "Se eliminarán los datos locales actuales y se restaurará el catálogo inicial. Haz un respaldo antes si lo necesitas."
-    )
-  ) {
-
-    localStorage.removeItem(
-      KEY
-    );
-
-
-    db = load();
-
-
-    renderAll();
-
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
   }
 
+  if (mode === "all_stores") {
+    area.innerHTML = `
+      <h2>Consolidado de los 4 inventarios · LUVAFE</h2>
+      <p>Fecha: ${new Date().toLocaleString("es-MX")}</p>
+      ${Object.entries(STORES).map(([key, info]) => `
+        <h3 style="margin-top:18px;color:#4E3629">${esc(info.name)}</h3>
+        ${inventoryTableHTML(key)}
+      `).join("")}
+    `;
+  }
 }
 
 
 /* =========================================================
-   EXPORTAR CSV
+   CSV, RESPALDO Y RESTAURACIÓN
 ========================================================= */
 
 function exportCSV() {
+  const storeObj = getStore();
+  const storeInfo = STORES[activeStore];
 
   const rows = [
-
-    [
-      "Materia prima",
-      "Unidad",
-      "Stock inicial",
-      "Entradas",
-      "Salidas",
-      "Stock actual",
-      "Stock mínimo",
-      "Estado",
-      "Costo unitario",
-      "Valor inventario"
-    ]
-
+    ["Inventario", "Articulo", "Unidad", "Inicial", "Entradas", "Salidas", "Actual", "Minimo", "Estado", "Costo", "Valor"]
   ];
 
-
-  db.items.forEach(item => {
-
+  storeObj.items.forEach(item => {
+    const stock = current(item);
     rows.push([
-
+      storeInfo.name,
       item.name,
-
       item.unit,
-
       item.initial,
-
-      item.in,
-
-      item.out,
-
-      current(item),
-
+      roundQty(item.in),
+      roundQty(item.out),
+      stock,
       item.min,
-
-      current(item)
-      <=
-      item.min
-      ?
-      "COMPRAR"
-      :
-      "OK",
-
+      stock <= qty(item.min) ? "REPONER" : "OK",
       item.cost,
-
       value(item)
-
     ]);
-
   });
 
+  const csv = rows
+    .map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+    .join("\n");
 
-  const csv =
-    rows
-      .map(row =>
-        row
-          .map(value =>
-            `"${String(value)
-              .replaceAll(
-                '"',
-                '""'
-              )}"`
-          )
-          .join(",")
-      )
-      .join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `LUVAFE_${activeStore}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+}
 
 
-  downloadBlob(
+function backup() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `LUVAFE_4_Inventarios_Respaldo_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+}
 
-    new Blob(
-      [csv],
-      {
-        type:
-          "text/csv;charset=utf-8"
+
+function restore(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (parsed && parsed.stores) {
+        db = parsed;
+        save();
+        alert("Respaldo de los 4 inventarios restaurado correctamente.");
+      } else {
+        alert("El archivo no tiene el formato válido de los 4 inventarios.");
       }
-    ),
+    } catch (err) {
+      alert("Error al leer el archivo JSON.");
+    }
+  };
+  reader.readAsText(file);
+}
 
-    `LUVAFE_inventario_${
-      new Date()
-        .toISOString()
-        .slice(0,10)
-    }.csv`
 
-  );
-
+function resetAll() {
+  if (confirm("¿Seguro que deseas borrar todos los datos de los 4 inventarios y volver al catálogo inicial?")) {
+    db = buildInitialDB();
+    save();
+  }
 }
 
 
 /* =========================================================
-   DESCARGA
-========================================================= */
-
-function downloadBlob(
-  blob,
-  filename
-) {
-
-  const link =
-    document.createElement("a");
-
-
-  link.href =
-    URL.createObjectURL(blob);
-
-
-  link.download =
-    filename;
-
-
-  link.click();
-
-
-  setTimeout(
-    () =>
-      URL.revokeObjectURL(
-        link.href
-      ),
-    1000
-  );
-
-}
-
-
-/* =========================================================
-   RENDER GENERAL
+   INICIALIZACIÓN
 ========================================================= */
 
 function renderAll() {
-
   renderDashboard();
-
   renderInventory();
-
-  renderMoves();
-
   populateSelect();
-
+  renderMoves();
+  populateLinkSelects();
+  renderLinks();
 }
-
-
-/* =========================================================
-   SERVICE WORKER
-========================================================= */
-
-if(
-  "serviceWorker"
-  in navigator
-) {
-
-  window.addEventListener(
-    "load",
-    () => {
-
-      navigator.serviceWorker
-        .register("sw.js")
-        .catch(
-          () => {}
-        );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   INICIO
-========================================================= */
 
 renderAll();
 
 </script>
 
-
 </body>
-
 </html>
